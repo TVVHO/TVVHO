@@ -1,23 +1,35 @@
--- TVVHO DYNASTY | ULTIMATE 30+ FUNCTIONS
+-- TVVHO DYNASTY | ULTIMATE 30+ FUNCTIONS (FINAL VERSION)
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
 local lp = Players.LocalPlayer
 local mouse = lp:GetMouse()
 local camera = workspace.CurrentCamera
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 
--- Настройки
+-- НАСТРОЙКИ
 _G.Aim = false
 _G.Esp = false
 
+-- ID ВАШЕЙ МУЗЫКИ (уже вставлен)
+local MusicID = "5779530195"
+
 -- Звуки
 local function playSfx(id)
-    local s = Instance.new("Sound", game:GetService("SoundService"))
+    local s = Instance.new("Sound", SoundService)
     s.SoundId = "rbxassetid://"..id
     s.Volume = 2
     s:Play()
     s.Ended:Connect(function() s:Destroy() end)
 end
+
+-- ФОНОВАЯ МУЗЫКА ДЛЯ МЕНЮ
+local MenuMusic = Instance.new("Sound", SoundService)
+MenuMusic.Name = "TVVHO_MenuMusic"
+MenuMusic.SoundId = "rbxassetid://"..MusicID
+MenuMusic.Volume = 0.5
+MenuMusic.Looped = true
+MenuMusic.Playing = false
 
 -- TOKYO INTRO
 local IntroFrame = Instance.new("Frame", ScreenGui)
@@ -47,14 +59,23 @@ end)
 
 -- ГЛАВНОЕ ОКНО
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 420, 0, 280)
-Main.Position = UDim2.new(0.5, -210, 0.5, -140)
+Main.Size = UDim2.new(0, 420, 0, 320)
+Main.Position = UDim2.new(0.5, -210, 0.5, -160)
 Main.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
 Main.Visible = false
 Main.Active = true
 Main.Draggable = true
 Main.ZIndex = 10
 Instance.new("UICorner", Main)
+
+-- КАРТИНКА САМУРАЯ (ID уже вставлен: 7995653636)
+local SamuraiImage = Instance.new("ImageLabel", Main)
+SamuraiImage.Size = UDim2.new(1, 0, 0, 120)
+SamuraiImage.Position = UDim2.new(0, 0, 0, 0)
+SamuraiImage.BackgroundTransparency = 1
+SamuraiImage.Image = "rbxassetid://7995653636"
+SamuraiImage.ScaleType = Enum.ScaleType.Fit
+SamuraiImage.ZIndex = 11
 
 -- НЕОН
 local Glow = Instance.new("ImageLabel", ScreenGui)
@@ -70,7 +91,8 @@ end)
 
 -- САЙДБАР
 local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 110, 1, 0)
+Sidebar.Size = UDim2.new(0, 110, 1, -120)
+Sidebar.Position = UDim2.new(0, 0, 0, 120)
 Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
 Sidebar.ZIndex = 11
 Instance.new("UICorner", Sidebar)
@@ -86,8 +108,8 @@ Title.ZIndex = 12
 
 -- КОНТЕЙНЕР СТРАНИЦ
 local PageContainer = Instance.new("Frame", Main)
-PageContainer.Size = UDim2.new(1, -120, 1, -10)
-PageContainer.Position = UDim2.new(0, 120, 0, 5)
+PageContainer.Size = UDim2.new(1, -120, 1, -135)
+PageContainer.Position = UDim2.new(0, 120, 0, 125)
 PageContainer.BackgroundTransparency = 1
 PageContainer.ZIndex = 11
 
@@ -99,7 +121,7 @@ local function CreatePage(name)
     p.BackgroundTransparency = 1
     p.ScrollBarThickness = 2
     p.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 50)
-    p.CanvasSize = UDim2.new(0, 0, 0, 1200) -- Место для ОЧЕНЬ большого количества кнопок
+    p.CanvasSize = UDim2.new(0, 0, 0, 1200)
     p.ZIndex = 12
     local l = Instance.new("UIListLayout", p)
     l.Padding = UDim.new(0, 5)
@@ -108,7 +130,8 @@ local function CreatePage(name)
     return p
 end
 
-local function AddButton(page, text, callback)local b = Instance.new("TextButton", page)
+local function AddButton(page, text, callback)
+    local b = Instance.new("TextButton", page)
     b.Size = UDim2.new(0.95, 0, 0, 35)
     b.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     b.Text = text
@@ -183,11 +206,19 @@ local function Tab(n, y)
     end)
 end
 
-Tab("Combat", 60); Tab("World", 100); Tab("Visuals", 140); Tab("Misc", 180)
+Tab("Combat", 0); Tab("World", 40); Tab("Visuals", 80); Tab("Misc", 120)
 Pages["Combat"].Visible = true
 
--- ЛОГИКА
+-- ЛОГИКА МУЗЫКИ И МЕНЮ
 game:GetService("RunService").RenderStepped:Connect(function()
+    -- Музыка: играет только когда меню открыто
+    if Main.Visible and not MenuMusic.Playing then
+        MenuMusic:Play()
+    elseif not Main.Visible and MenuMusic.Playing then
+        MenuMusic:Stop()
+    end
+
+    -- Aimbot
     if _G.Aim then
         local target = nil
         local dist = 200
@@ -200,6 +231,8 @@ game:GetService("RunService").RenderStepped:Connect(function()
         end
         if target then camera.CFrame = CFrame.new(camera.CFrame.Position, target.Character.Head.Position) end
     end
+
+    -- ESP
     if _G.Esp then
         for _, v in pairs(Players:GetPlayers()) do
             if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
@@ -218,7 +251,10 @@ Toggle.Position = UDim2.new(0, 10, 0.4, 0)
 Toggle.Image = "rbxassetid://6031225818"
 Toggle.Visible = false; Toggle.ZIndex = 50
 Instance.new("UICorner", Toggle)
-Toggle.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible; Glow.Visible = Main.Visible end)
+Toggle.MouseButton1Click:Connect(function() 
+    Main.Visible = not Main.Visible 
+    Glow.Visible = Main.Visible 
+end)
 
 task.wait(4.5)
 Main.Visible = true; Glow.Visible = true; Toggle.Visible = true
