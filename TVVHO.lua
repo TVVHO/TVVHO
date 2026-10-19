@@ -1,105 +1,87 @@
--- КОНФИГУРАЦИЯ
-local MY_KEY = "TVVHOGAMES009"
 
-local player = game.Players.LocalPlayer
-local pgui = player:WaitForChild("PlayerGui")
+-- TVVHO ANTICHEAT LAB
+-- Local test monitor for Roblox
+-- Run as a LocalScript in your own test environment.
 
--- Очистка старых меню
-if pgui:FindFirstChild("TVVHO_FINAL") then pgui.TVVHO_FINAL:Destroy() end
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "TVVHO_TestMonitor"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
-local sg = Instance.new("ScreenGui", pgui)
-sg.Name = "TVVHO_FINAL"
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(280, 245)
+frame.Position = UDim2.new(0.5, -140, 0.35, 0)
+frame.BackgroundColor3 = Color3.fromRGB(5, 12, 8)
+frame.BorderSizePixel = 0
+frame.Parent = gui
 
--- ОКНО КЛЮЧА
-local KeyFrame = Instance.new("Frame", sg)
-KeyFrame.Size = UDim2.new(0, 200, 0, 150)
-KeyFrame.Position = UDim2.new(0.5, -100, 0.4, 0)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-KeyFrame.Active = true
-KeyFrame.Draggable = true
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = frame
 
-local KeyInput = Instance.new("TextBox", KeyFrame)
-KeyInput.Size = UDim2.new(0.8, 0, 0, 30)
-KeyInput.Position = UDim2.new(0.1, 0, 0.2, 0)
-KeyInput.PlaceholderText = "КЛЮЧ ТУТ..."
-KeyInput.Text = ""
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(0, 255, 100)
+stroke.Thickness = 2
+stroke.Parent = frame
 
-local CheckBtn = Instance.new("TextButton", KeyFrame)
-CheckBtn.Size = UDim2.new(0.8, 0, 0, 30)
-CheckBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
-CheckBtn.Text = "ЗАПУСК"
-CheckBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-CheckBtn.TextColor3 = Color3.new(1, 1, 1)
-
--- ОСНОВНОЕ МЕНЮ (ПОЯВИТСЯ ПОСЛЕ КЛЮЧА)
-local function StartScript()
-    KeyFrame.Visible = false
-    local frame = Instance.new("Frame", sg)
-    frame.Size = UDim2.new(0, 180, 0, 220)
-    frame.Position = UDim2.new(0.5, -90, 0.3, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    frame.Draggable = true
-
-    local title = Instance.new("TextLabel", frame)
-    title.Size = UDim2.new(1, 0, 0, 30)
-    title.Text = "TVVHO UNLOCKED"
-    title.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
-    title.TextColor3 = Color3.new(1,1,1)
-
-    local function makeBtn(name, pos, callback)
-        local b = Instance.new("TextButton", frame)
-        b.Size = UDim2.new(0.9, 0, 0, 35)
-        b.Position = UDim2.new(0.05, 0, 0, pos)
-        b.Text = name
-        b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        b.TextColor3 = Color3.new(1, 1, 1)
-        b.MouseButton1Click:Connect(callback)
-    end
-
-    -- ТЕ САМЫЕ РАБОЧИЕ ФУНКЦИИ
-    makeBtn("AUTO-STEAL", 40, function()
-        _G.Steal = true
-        while _G.Steal do
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v:IsA("ClickDetector") then fireclickdetector(v)
-                elseif v:IsA("ProximityPrompt") then v.HoldDuration = 0 fireproximityprompt(v) end
-            end
-            task.wait(0.1)
-        end
-    end)
-
-    makeBtn("ESP (Players)", 85, function()
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= player and p.Character then
-                local h = Instance.new("Highlight", p.Character)
-                h.FillColor = Color3.fromRGB(255, 0, 0)
-            end
-        end
-    end)
-
-    makeBtn("NoClip Doors", 130, function()
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") and (v.Name:lower():find("door") or v.Name:lower():find("gate")) then
-                v.CanCollide = false
-                v.Transparency = 0.5
-            end
-        end
-    end)
-
-    makeBtn("Anti-Knockback", 175, function()
-        game:GetService("RunService").Heartbeat:Connect(function()
-            if player.Character then player.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0) end
-        end)
-    end)
+local function label(text, y, height)
+    local l = Instance.new("TextLabel")
+    l.Position = UDim2.fromOffset(12, y)
+    l.Size = UDim2.new(1, -24, 0, height or 30)
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextColor3 = Color3.fromRGB(0, 255, 100)
+    l.Font = Enum.Font.Code
+    l.TextSize = 14
+    l.TextWrapped = true
+    l.Parent = frame
+    return l
 end
 
--- ПРОВЕРКА КЛЮЧА
-CheckBtn.MouseButton1Click:Connect(function()
-    if KeyInput.Text == MY_KEY then
-        StartScript()
-    else
-        CheckBtn.Text = "НЕВЕРНО!"
-        wait(1)
-        CheckBtn.Text = "ЗАПУСК"
-    end
+local function button(text, y, callback)
+    local b = Instance.new("TextButton")
+    b.Position = UDim2.fromOffset(12, y)
+    b.Size = UDim2.new(1, -24, 0, 36)
+    b.BackgroundColor3 = Color3.fromRGB(12, 35, 20)
+    b.TextColor3 = Color3.fromRGB(180, 255, 200)
+    b.Text = text
+    b.Font = Enum.Font.Code
+    b.TextSize = 13
+    b.Parent = frame
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 7)
+    c.Parent = b
+
+    b.Activated:Connect(callback)
+    return b
+end
+
+label("TVVHO // ANTICHEAT LAB", 8, 28)
+local status = label("STATUS: READY", 39, 25)
+local log = label("No test recorded.", 66, 40)
+
+local startedAt
+local function recordResult(text)
+    local elapsed = startedAt and
+        string.format("%.1f sec", os.clock() - startedAt) or "N/A"
+    log.Text = text .. "\nElapsed: " .. elapsed
+end
+
+button("START FLY TEST", 112, function()
+    startedAt = os.clock()
+    status.Text = "STATUS: TEST RUNNING"
+    recordResult("Observe server anti-cheat")
+end)
+
+button("RECORD: KICKED", 154, function()
+    status.Text = "STATUS: KICK OBSERVED"
+    recordResult("Manual result: kicked")
+end)
+
+button("RECORD: NOT KICKED", 196, function()
+    status.Text = "STATUS: STILL IN GAME"
+    recordResult("Manual result: not kicked")
 end)
