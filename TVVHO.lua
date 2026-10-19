@@ -1,87 +1,60 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local RunService = game:GetService("RunService")
 
--- TVVHO ANTICHEAT LAB
--- Local test monitor for Roblox
--- Run as a LocalScript in your own test environment.
+-- Создание GUI
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local main = Instance.new("Frame", screenGui)
+main.Size = UDim2.new(0, 220, 0, 350)
+main.Position = UDim2.new(0.5, -110, 0.5, -175)
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+main.Active = true
+main.Draggable = true -- Позволяет двигать окно пальцем
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local gui = Instance.new("ScreenGui")
-gui.Name = "TVVHO_TestMonitor"
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+local list = Instance.new("UIListLayout", main)
+list.Padding = UDim.new(0, 5)
+list.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.fromOffset(280, 245)
-frame.Position = UDim2.new(0.5, -140, 0.35, 0)
-frame.BackgroundColor3 = Color3.fromRGB(5, 12, 8)
-frame.BorderSizePixel = 0
-frame.Parent = gui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = frame
-
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(0, 255, 100)
-stroke.Thickness = 2
-stroke.Parent = frame
-
-local function label(text, y, height)
-    local l = Instance.new("TextLabel")
-    l.Position = UDim2.fromOffset(12, y)
-    l.Size = UDim2.new(1, -24, 0, height or 30)
-    l.BackgroundTransparency = 1
-    l.Text = text
-    l.TextColor3 = Color3.fromRGB(0, 255, 100)
-    l.Font = Enum.Font.Code
-    l.TextSize = 14
-    l.TextWrapped = true
-    l.Parent = frame
-    return l
+local function addButton(text, callback)
+    local btn = Instance.new("TextButton", main)
+    btn.Size = UDim2.new(0.9, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    btn.MouseButton1Click:Connect(callback)
 end
 
-local function button(text, y, callback)
-    local b = Instance.new("TextButton")
-    b.Position = UDim2.fromOffset(12, y)
-    b.Size = UDim2.new(1, -24, 0, 36)
-    b.BackgroundColor3 = Color3.fromRGB(12, 35, 20)
-    b.TextColor3 = Color3.fromRGB(180, 255, 200)
-    b.Text = text
-    b.Font = Enum.Font.Code
-    b.TextSize = 13
-    b.Parent = frame
+-- Переменные функций
+local flying = false
+local bodyVel
 
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 7)
-    c.Parent = b
-
-    b.Activated:Connect(callback)
-    return b
-end
-
-label("TVVHO // ANTICHEAT LAB", 8, 28)
-local status = label("STATUS: READY", 39, 25)
-local log = label("No test recorded.", 66, 40)
-
-local startedAt
-local function recordResult(text)
-    local elapsed = startedAt and
-        string.format("%.1f sec", os.clock() - startedAt) or "N/A"
-    log.Text = text .. "\nElapsed: " .. elapsed
-end
-
-button("START FLY TEST", 112, function()
-    startedAt = os.clock()
-    status.Text = "STATUS: TEST RUNNING"
-    recordResult("Observe server anti-cheat")
+-- Логика функций
+addButton("Fly (Toggle)", function()
+    flying = not flying
+    if flying then
+        bodyVel = Instance.new("BodyVelocity", player.Character.HumanoidRootPart)
+        bodyVel.MaxForce = Vector3.new(100000, 100000, 100000)
+        bodyVel.Velocity = Vector3.new(0, 0, 0)
+    elseif bodyVel then
+        bodyVel:Destroy()
+    end
 end)
 
-button("RECORD: KICKED", 154, function()
-    status.Text = "STATUS: KICK OBSERVED"
-    recordResult("Manual result: kicked")
+addButton("Aimbot (Head)", function()
+    local closest, min = nil, math.huge
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local dist = (p.Character.Head.Position - player.Character.Head.Position).Magnitude
+            if dist < min then closest = p; min = dist end
+        end
+    end
+    if closest then
+        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, closest.Character.Head.Position)
+    end
 end)
 
-button("RECORD: NOT KICKED", 196, function()
-    status.Text = "STATUS: STILL IN GAME"
-    recordResult("Manual result: not kicked")
-end)
+addButton("Speed x2", function() player.Character.Humanoid.WalkSpeed = 32 end)
+addButton("Reset", function() player.Character.Humanoid.WalkSpeed = 16; if bodyVel then bodyVel:Destroy() end end)
+addButton("Close Menu", function() screenGui:Destroy() end)
