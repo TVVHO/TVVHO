@@ -1,111 +1,45 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-   Name = "💠 TVVHO Visuals | NextGen Graphics",
-   LoadingTitle = "Загрузка шейдеров TVVHO...",
-   LoadingSubtitle = "by TBBXO",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "TVVHO_Settings",
-      FileName = "ShaderConfig"
-   },
-   KeySystem = false -- Система ключей выключена для удобства
-})
-
-local MainTab = Window:CreateTab("🎨 Основные Шейдеры", 4483362458) -- Иконка кисти
-local VisualsSection = MainTab:CreateSection("Настройка картинки")
-
--- Сервисы освещения
+-- TVVHO Ultra Graphics Engine
 local Lighting = game:GetService("Lighting")
-local ColorCorr = Lighting:FindFirstChildOfClass("ColorCorrectionEffect") or Instance.new("ColorCorrectionEffect", Lighting)
-local Bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect", Lighting)
+local Terrain = game:GetService("Workspace").Terrain
 
-MainTab:CreateSlider({
-   Name = "Насыщенность (Saturation)",
-   Range = {-1, 1},
-   Increment = 0.1,
-   Suffix = "S",
-   CurrentValue = 0,
-   Callback = function(Value)
-      ColorCorr.Saturation = Value
-   end,
-})
+-- Удаляем старые эффекты, чтобы не лагало
+for _, v in pairs(Lighting:GetChildren()) do
+    if v:IsA("PostProcessEffect") then v:Destroy() end
+end
 
-MainTab:CreateSlider({
-   Name = "Контраст (Contrast)",
-   Range = {-1, 1},
-   Increment = 0.1,
-   Suffix = "C",
-   CurrentValue = 0,
-   Callback = function(Value)
-      ColorCorr.Contrast = Value
-   end,
-})
+-- 1. Настройка Bloom (Эффект HDR и свечения)
+local Bloom = Instance.new("BloomEffect", Lighting)
+Bloom.Intensity = 0.5
+Bloom.Size = 18
+Bloom.Threshold = 0.8
 
-MainTab:CreateSlider({
-   Name = "Мягкий свет (Bloom)",
-   Range = {0, 10},
-   Increment = 0.5,
-   Suffix = "B",
-   CurrentValue = 1,
-   Callback = function(Value)
-      Bloom.Intensity = Value
-   end,
-})
+-- 2. ColorCorrection (Насыщенная и четкая картинка)
+local CC = Instance.new("ColorCorrectionEffect", Lighting)
+CC.Brightness = 0.05
+CC.Contrast = 0.2
+CC.Saturation = 0.35
 
-local EffectsTab = Window:CreateTab("✨ Эффекты", 4483345998) -- Иконка звезд
-local EffectSection = EffectsTab:CreateSection("Дополнительно")
+-- 3. SunRays (Реалистичные лучи солнца)
+local Sun = Instance.new("SunRaysEffect", Lighting)
+Sun.Intensity = 0.15
+Sun.Spread = 1
 
-EffectsTab:CreateToggle({
-   Name = "Солнечные лучи (SunRays)",
-   CurrentValue = false,
-   Flag = "SunRaysToggle",
-   Callback = function(Value)
-      local sun = Lighting:FindFirstChildOfClass("SunRaysEffect") or Instance.new("SunRaysEffect", Lighting)
-      sun.Enabled = Value
-      sun.Intensity = 0.1
-   end,
-})
+-- 4. DepthOfField (Размытие заднего фона, эффект камеры)
+local DOF = Instance.new("DepthOfFieldEffect", Lighting)
+DOF.FarIntensity = 0.1
+DOF.FocusDistance = 50
+DOF.InFocusRadius = 40
 
-EffectsTab:CreateToggle({
-   Name = "Размытие (Depth of Field)",
-   CurrentValue = false,
-   Flag = "DOF",
-   Callback = function(Value)
-      local dof = Lighting:FindFirstChildOfClass("DepthOfFieldEffect") or Instance.new("DepthOfFieldEffect", Lighting)
-      dof.Enabled = Value
-      dof.FarIntensity = 0.5
-      dof.FocusDistance = 50
-   end,
-})
+-- 5. Общие настройки Lighting (Тени и освещение)
+Lighting.GlobalShadows = true
+Lighting.ShadowSoftness = 0.1
+Lighting.Brightness = 2.5
+Lighting.ExposureCompensation = 0.5
 
-local PresetsTab = Window:CreateTab("💾 Пресеты", 4483362458)
+-- 6. Улучшение текстур воды
+Terrain.WaterReflectionSize = 1024
+Terrain.WaterWaveSize = 0.15
+Terrain.WaterWaveSpeed = 10
+Terrain.WaterTransparency = 0.5
 
-PresetsTab:CreateButton({
-   Name = "Ультра Реализм (RTX)",
-   Callback = function()
-      ColorCorr.Saturation = 0.2
-      ColorCorr.Contrast = 0.15
-      Bloom.Intensity = 0.5
-      Lighting.Brightness = 2
-      Rayfield:Notify({Title = "Пресет применен", Content = "Установлены настройки RTX", Duration = 3})
-   end,
-})
-
-PresetsTab:CreateButton({
-   Name = "Сброс настроек",
-   Callback = function()
-      ColorCorr.Saturation = 0
-      ColorCorr.Contrast = 0
-      Bloom.Intensity = 1
-      Lighting.Brightness = 2
-      Rayfield:Notify({Title = "Сброс", Content = "Стандартная графика", Duration = 3})
-   end,
-})
-
-Rayfield:Notify({
-   Title = "Готово!",
-   Content = "Скрипт TVVHO успешно загружен",
-   Duration = 5,
-   Image = 4483345998,
-})
+print("TVVHO Graphics Loaded!")
