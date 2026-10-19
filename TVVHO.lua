@@ -1,91 +1,80 @@
-lua
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("TVVHO - Sniper & God", "DarkTheme")
 
-local Window = Rayfield:CreateWindow({
-   Name = "💎 TVVHO HUB | Steal Loot Edition",
-   LoadingTitle = "Запуск Снайпера Покупок...",
-   LoadingSubtitle = "by TVVHO",
-})
+-- ВКЛАДКА ГЛАВНАЯ
+local Main = Window:NewTab("Главная")
+local Section = Main:NewSection("Автоматизация")
 
--- ВКЛАДКА: СНАЙПЕР (Самое важное для этого плейса)
-local SniperTab = Window:CreateTab("Снайпер Покупок", 4483362458)
-
-local AutoBuy = false
-SniperTab:CreateToggle({
-   Name = "AUTO-BUY: Забирать всё первым",
-   CurrentValue = false,
-   Callback = function(Value)
-      AutoBuy = Value
-      task.spawn(function()
-         while AutoBuy do
-            -- Ищем ClickDetector (та самая рука на экране)
+_G.AutoClick = false
+Section:NewToggle("АВТО-ПОКУПКА (Ultra)", "Забирает лут быстрее всех", function(state)
+    _G.AutoClick = state
+    task.spawn(function()
+        while _G.AutoClick do
             for _, v in pairs(workspace:GetDescendants()) do
-               if v:IsA("ClickDetector") then
-                  -- Проверяем, что это не дверь и не мусор (можно настроить)
-                  -- Дистанция клика в этом плейсе важна
-                  fireclickdetector(v)
-               end
+                if v:IsA("ClickDetector") then fireclickdetector(v) end
+                if v:IsA("ProximityPrompt") then 
+                    v.HoldDuration = 0 
+                    fireproximityprompt(v) 
+                end
             end
-            task.wait(0.01) -- Скорость сканирования (бешеная)
-         end
-      end)
-   end,
-})
+            task.wait(0.05)
+        end
+    end)
+end)
 
-SniperTab:CreateButton({
-   Name = "Мгновенное использование (E)",
-   Callback = function()
-      for _, v in pairs(workspace:GetDescendants()) do
-         if v:IsA("ProximityPrompt") then
-            v.HoldDuration = 0
-         end
-      end
-   end,
-})
+-- ВКЛАДКА ЗАЩИТА
+local Protect = Window:NewTab("Защита")
+local PSection = Protect:NewSection("Бессмертие")
 
--- ВКЛАДКА: ЗАЩИТА БАЗЫ
-local DefenseTab = Window:CreateTab("Защита", 4483362458)
+PSection:NewButton("GOD MODE (Бессмертие)", "Зомби и турели не наносят урон", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    
+    -- Этот метод удаляет обработчик урона на стороне клиента
+    if character:FindFirstChild("Humanoid") then
+        character.Humanoid.Name = "TVVHO_Humanoid" -- Обман системы игры
+    end
+    
+    local newHumanoid = character["TVVHO_Humanoid"]:Clone()
+    newHumanoid.Name = "Humanoid"
+    newHumanoid.Parent = character
+    character["TVVHO_Humanoid"]:Destroy()
+    
+    workspace.CurrentCamera.CameraSubject = character.Humanoid
+    
+    Rayfield:Notify({Title = "TVVHO", Content = "Бессмертие включено!", Duration = 3})
+end)
 
-DefenseTab:CreateToggle({
-   Name = "Подсветка воров (ESP)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.PlayerESP = Value
-      while _G.PlayerESP do
-         for _, p in pairs(game.Players:GetPlayers()) do
+PSection:NewToggle("Анти-Замедление", "Всегда быстрая скорость", function(state)
+    _G.NoSlow = state
+    task.spawn(function()
+        while _G.NoSlow do
+            if game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+                game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 30
+            end
+            task.wait(0.5)
+        end
+    end)
+end)
+
+-- ВКЛАДКА ВИЗУАЛЫ
+local Visuals = Window:NewTab("Визуалы")
+local VSection = Visuals:NewSection("ESP")
+
+_G.ESP = false
+VSection:NewToggle("ESP (Красные силуэты)", "Видеть игроков", function(state)
+    _G.ESP = state
+    while _G.ESP do
+        for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= game.Players.LocalPlayer and p.Character and not p.Character:FindFirstChild("Highlight") then
-               local h = Instance.new("Highlight", p.Character)
-               h.FillColor = Color3.fromRGB(255, 0, 0)
+                Instance.new("Highlight", p.Character).FillColor = Color3.fromRGB(255, 0, 0)
             end
-         end
-         task.wait(2)
-      end
-   end,
-})
+        end
+        task.wait(2)
+    end
+end)
 
--- ВКЛАДКА: ПЕРСОНАЖ
-local PlayerTab = Window:CreateTab("Игрок", 4483345998)
-
-PlayerTab:CreateSlider({
-   Name = "Скорость (WalkSpeed)",
-   Range = {16, 150},
-   Increment = 1,
-   CurrentValue = 16,
-   Callback = function(Value)
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-   end,
-})
-
-PlayerTab:CreateButton({
-   Name = "Fly (Полет для набегов)",
-   Callback = function()
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.lua"))()
-   end,
-})
-
--- УВЕДОМЛЕНИЕ О ЗАПУСКЕ
-Rayfield:Notify({
-   Title = "TVVHO АКТИВИРОВАН",
-   Content = "Включи 'AUTO-BUY', чтобы забирать вещи за 0.01 сек!",
-   Duration = 5,
-})
+VSection:NewButton("Убрать туман и тени", function()
+    game:GetService("Lighting").FogEnd = 100000
+    game:GetService("Lighting").GlobalShadows = false
+end)
