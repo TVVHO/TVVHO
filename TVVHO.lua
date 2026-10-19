@@ -1,210 +1,209 @@
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
-local camera = workspace.CurrentCamera
-local mouse = lp:GetMouse()
-local RunService = game:GetService("RunService")
 
--- НАСТРОЙКИ
-_G.AimEnabled = false
-_G.AimbotFOV = 150
-_G.EspEnabled = false
-_G.WalkSpeed = 16
-_G.JumpPower = 50
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 
--- Звуки
+-- Функция для звука
 local function playSfx(id)
     local s = Instance.new("Sound", game:GetService("SoundService"))
     s.SoundId = "rbxassetid://"..id
     s.Volume = 0.5
     s:Play()
+    s.Ended:Connect(function() s:Destroy() end)
 end
 
-local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+-- ==========================================
+-- ИНТРО С НЕОНОМ
+-- ==========================================
+local IntroFrame = Instance.new("Frame", ScreenGui)
+IntroFrame.Size = UDim2.new(1, 0, 1, 0)
+IntroFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+IntroFrame.ZIndex = 100
 
--- КНОПКА ОТКРЫТИЯ
-local ToggleBtn = Instance.new("ImageButton", ScreenGui)
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0, 10, 0.4, 0)
-ToggleBtn.Image = "rbxassetid://6031225818"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(15,15,15)
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1,0)
-Instance.new("UIStroke", ToggleBtn).Color = Color3.fromRGB(255,0,50)
+local IntroText = Instance.new("TextLabel", IntroFrame)
+IntroText.Size = UDim2.new(1, 0, 1, 0)
+IntroText.BackgroundTransparency = 1
+IntroText.Text = "TVVHO DYNASTY"
+IntroText.TextColor3 = Color3.fromRGB(255, 0, 50)
+IntroText.Font = Enum.Font.GothamBold
+IntroText.TextSize = 2
+IntroText.TextTransparency = 1
+IntroText.ZIndex = 101
 
--- МЕНЮ
+-- Неоновая тень под текстом интро
+local TextGlow = Instance.new("TextLabel", IntroFrame)
+TextGlow.Size = IntroText.Size
+TextGlow.BackgroundTransparency = 1
+TextGlow.Text = IntroText.Text
+TextGlow.TextColor3 = Color3.fromRGB(255, 0, 50)
+TextGlow.Font = IntroText.Font
+TextGlow.TextSize = IntroText.TextSize
+TextGlow.TextTransparency = 1
+TextGlow.ZIndex = 100
+
+local function StartIntro()
+    task.wait(0.5)
+    playSfx(1548170034)
+    TweenService:Create(IntroText, TweenInfo.new(1), {TextSize = 45, TextTransparency = 0}):Play()
+    -- Эффект неоновой вспышки
+    task.wait(0.2)
+    TweenService:Create(TextGlow, TweenInfo.new(1), {TextSize = 60, TextTransparency = 0.5}):Play()
+    task.wait(1.5)
+    TweenService:Create(IntroFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(IntroText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+    TweenService:Create(TextGlow, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+    task.wait(1)
+    IntroFrame:Destroy()
+end
+
+-- ==========================================
+-- ГЛАВНОЕ МЕНЮ С НЕОНОВЫМ СВЕЧЕНИЕМ
+-- ==========================================
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 450, 0, 300)
-Main.Position = UDim2.new(0.5, -225, 0.5, -150)
-Main.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
+Main.Size = UDim2.new(0, 420, 0, 280)
+Main.Position = UDim2.new(0.5, -210, 0.5, -140)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
 Main.BorderSizePixel = 0
-Main.ClipsDescendants = true
+Main.Visible = false
 Main.Draggable = true
 Main.Active = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
--- САМУРАЙ (ФОН) - ИСПОЛЬЗУЕМ ПРОВЕРЕННЫЙ ID
-local Samurai = Instance.new("ImageLabel", Main)
-Samurai.Size = UDim2.new(0, 300, 0, 300)
-Samurai.Position = UDim2.new(0.4, 0, 0, 0)
-Samurai.Image = "rbxassetid://10829815041" -- Этот точно работает
-Samurai.BackgroundTransparency = 1
-Samurai.ImageTransparency = 0.85
-Samurai.ZIndex = 1
+-- НЕОНОВАЯ ОБВОДКА (Glow)
+local MainGlow = Instance.new("ImageLabel", ScreenGui)
+MainGlow.Name = "MainGlow"
+MainGlow.BackgroundTransparency = 1
+MainGlow.Image = "rbxassetid://1316045217" -- Текстура мягкого свечения
+MainGlow.ImageColor3 = Color3.fromRGB(255, 0, 50)
+MainGlow.ImageTransparency = 0.4
+MainGlow.ZIndex = Main.ZIndex - 1
+MainGlow.Visible = false
 
--- САЙДБАР
+-- Синхронизация свечения с окном
+RunService = game:GetService("RunService")
+RunService.RenderStepped:Connect(function()
+    MainGlow.Position = UDim2.new(Main.Position.X.Scale, Main.Position.X.Offset - 25, Main.Position.Y.Scale, Main.Position.Y.Offset - 25)
+    MainGlow.Size = UDim2.new(0, Main.Size.X.Offset + 50, 0, Main.Size.Y.Offset + 50)
+end)
+
+-- Пульсация неона
+task.spawn(function()
+    while true do
+        TweenService:Create(MainGlow, TweenInfo.new(1.5), {ImageTransparency = 0.7}):Play()
+        task.wait(1.5)
+        TweenService:Create(MainGlow, TweenInfo.new(1.5), {ImageTransparency = 0.3}):Play()
+        task.wait(1.5)
+    end
+end)
+
+-- Сайдбар
 local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 120, 1, 0)
-Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
-Sidebar.ZIndex = 5
+Sidebar.Size = UDim2.new(0, 110, 1, 0)
+Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15,17)
+Sidebar.BorderSizePixel = 0
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
 
-local Title = Instance.new("TextLabel", Sidebar)
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Text = "TVVHO 侍"
-Title.TextColor3 = Color3.fromRGB(255, 0, 50)
-Title.TextSize = 20
-Title.Font = Enum.Font.GothamBold
-Title.BackgroundTransparency = 1
-Title.ZIndex = 6
+local NeonLine = Instance.new("Frame", Sidebar)
+NeonLine.Size = UDim2.new(0, 2, 0.8, 0)
+NeonLine.Position = UDim2.new(1, 0, 0.1, 0)
+NeonLine.BackgroundColor3 = Color3.fromRGB(255, 0, 50)
+NeonLine.BorderSizePixel = 0
+-- Добавляем неон на линию
+local LineGlow = Instance.new("Frame", NeonLine)
+LineGlow.Size = UDim2.new(4, 0, 1, 0)
+LineGlow.Position = UDim2.new(-1.5, 0, 0, 0)
+LineGlow.BackgroundColor3 = Color3.fromRGB(255, 0, 50)
+LineGlow.BackgroundTransparency = 0.5
+Instance.new("UICorner", LineGlow).CornerRadius = UDim.new(1, 0)
 
--- КОНТЕЙНЕР СТРАНИЦ
+-- [Функции AddButton и AddToggle теперь будут иметь неоновый эффект при наведении/включении]
+
+local function AddButton(page, text, callback)
+    local b = Instance.new("TextButton", page)
+    b.Size = UDim2.new(0.95, 0, 0, 35)
+    b.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    b.Text = text
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.Gotham
+    Instance.new("UICorner", b)
+    
+    -- Неоновый контур кнопки
+    local stroke = Instance.new("UIStroke", b)
+    stroke.Color = Color3.fromRGB(255, 0, 50)
+    stroke.Transparency = 1
+    stroke.Thickness = 1.5
+
+    b.MouseButton1Click:Connect(function()
+        playSfx(5545464063)
+        stroke.Transparency = 0
+        TweenService:Create(stroke, TweenInfo.new(0.5), {Transparency = 1}):Play()
+        callback()
+    end)
+end
+
+-- Переключение вкладок
 local PageContainer = Instance.new("Frame", Main)
-PageContainer.Size = UDim2.new(1, -130, 1, -10)
-PageContainer.Position = UDim2.new(0, 130, 0, 5)
+PageContainer.Size = UDim2.new(1, -120, 1, -10)
+PageContainer.Position = UDim2.new(0, 120, 0, 5)
 PageContainer.BackgroundTransparency = 1
-PageContainer.ZIndex = 5
 
 local Pages = {}
-
 local function CreatePage(name)
     local p = Instance.new("ScrollingFrame", PageContainer)
     p.Size = UDim2.new(1, 0, 1, 0)
     p.Visible = false
     p.BackgroundTransparency = 1
-    p.ScrollBarThickness = 2
-    p.CanvasSize = UDim2.new(0, 0, 0, 1000) -- Для 30 функций
-    Instance.new("UIListLayout", p).Padding = UDim.new(0, 5)
+    p.CanvasSize = UDim2.new(0, 0, 0, 800)
+    p.ScrollBarThickness = 0
+    Instance.new("UIListLayout", p).Padding = UDim.new(0, 8)
     Pages[name] = p
     return p
 end
 
-local function AddToggle(page, text, callback)
-    local b = Instance.new("TextButton", page)
-    b.Size = UDim2.new(0.95, 0, 0, 35)
-    b.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    b.Text = "  " .. text
-    b.TextColor3 = Color3.fromRGB(200, 200, 200)
-    b.TextXAlignment = "Left"
-    b.ZIndex = 10
-    Instance.new("UICorner", b)
-    local state = false
-    b.MouseButton1Click:Connect(function()
-        state = not state
-        b.TextColor3 = state and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
-        b.BackgroundColor3 = state and Color3.fromRGB(255, 0, 50) or Color3.fromRGB(30, 30, 35)
-        callback(state)
-    end)
-end
-
-local function AddButton(page, text, callback)
-    local b = Instance.new("TextButton", page)
-    b.Size = UDim2.new(0.95, 0, 0, 35)
-    b.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-    b.Text = text
-    b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.ZIndex = 10
-    Instance.new("UICorner", b)
-    b.MouseButton1Click:Connect(function() playSfx(5545464063); callback() end)
-end
-
--- СОЗДАЕМ ВКЛАДКИ
 local Combat = CreatePage("Combat")
 local World = CreatePage("World")
-local Visuals = CreatePage("Visuals")
-local Misc = CreatePage("Misc")
 
--- ⚔️ COMBAT (10 ФУНКЦИЙ)
-AddToggle(Combat, "Aimbot", function(v) _G.AimEnabled = v end)
-AddToggle(Combat, "Silent Aim", function(v) end)
-AddButton(Combat, "FOV: 100", function() _G.AimbotFOV = 100 end)
-AddButton(Combat, "FOV: 300", function() _G.AimbotFOV = 300 end)
-AddToggle(Combat, "Auto Clicker", function() end)
-AddToggle(Combat, "Trigger Bot", function() end)
-AddButton(Combat, "Kill Aura (Near)", function() end)
-AddButton(Combat, "Hitbox Expander", function() end)
-AddToggle(Combat, "No Recoil", function() end)
-AddToggle(Combat, "Rapid Fire", function() end)
+-- Пример функций
+AddButton(Combat, "Silent Aim [NEON]", function() print("Neon Aim Active") end)
+AddButton(World, "GodSpeed", function() lp.Character.Humanoid.WalkSpeed = 200 end)
 
--- 🌍 WORLD (10 ФУНКЦИЙ)
-AddButton(World, "Speed 50", function() lp.Character.Humanoid.WalkSpeed = 50 end)
-AddButton(World, "Speed 100", function() lp.Character.Humanoid.WalkSpeed = 100 end)
-AddButton(World, "Normal Speed", function() lp.Character.Humanoid.WalkSpeed = 16 end)
-AddButton(World, "Jump 100", function() lp.Character.Humanoid.JumpPower = 100 end)
-AddButton(World, "Infinite Jump", function() 
-    game:GetService("UserInputService").JumpRequest:Connect(function()
-        lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-    end)
-end)
-AddToggle(World, "Noclip", function(v) end)
-AddToggle(World, "Fly", function(v) end)
-AddButton(World, "Ctrl+Click TP", function() end)
-AddButton(World, "Gravity: 0", function() workspace.Gravity = 0 end)
-AddButton(World, "Gravity: Normal", function() workspace.Gravity = 196.2 end)
-
--- 👁️ VISUALS (5 ФУНКЦИЙ)
-AddToggle(Visuals, "ESP Boxes", function(v) _G.EspEnabled = v end)
-AddToggle(Visuals, "ESP Lines", function(v) end)
-AddToggle(Visuals, "ESP Names", function(v) end)
-AddButton(Visuals, "Fullbright", function() game.Lighting.Brightness = 2; game.Lighting.ClockTime = 14 end)
-AddButton(Visuals, "Field of View 120", function() camera.FieldOfView = 120 end)
-
--- 🛠️ MISC (5 ФУНКЦИЙ)
-AddButton(Misc, "Anti-AFK", function() end)
-AddButton(Misc, "Rejoin Game", function() game:GetService("TeleportService"):Teleport(game.PlaceId, lp) end)
-AddButton(Misc, "Copy TG: @TVVHOTER", function() setclipboard("@TVVHOTER") end)
-AddButton(Misc, "FPS Cap 60", function() setfpscap(60) end)
-AddButton(Misc, "Destroy UI", function() ScreenGui:Destroy() end)
-
--- САЙДБАР ЛОГИКА
 local function Tab(n, y)
     local t = Instance.new("TextButton", Sidebar)
-    t.Size = UDim2.new(0.9, 0, 0, 35)
-    t.Position = UDim2.new(0.05, 0, 0, y)
+    t.Size = UDim2.new(0.85, 0, 0, 35)
+    t.Position = UDim2.new(0.07, 0, 0, y)
     t.Text = n
     t.BackgroundColor3 = Color3.fromRGB(255, 0, 50)
-    t.BackgroundTransparency = 0.8
-    t.TextColor3 = Color3.fromRGB(255,255,255)
-    t.ZIndex = 10
+    t.BackgroundTransparency = 0.9
+    t.TextColor3 = Color3.fromRGB(255, 255, 255)
     Instance.new("UICorner", t)
     t.MouseButton1Click:Connect(function()
         for _, p in pairs(Pages) do p.Visible = false end
         Pages[n].Visible = true
+        playSfx(5545464063)
     end)
 end
 
-Tab("Combat", 60); Tab("World", 100); Tab("Visuals", 140); Tab("Misc", 180)
+Tab("Combat", 60); Tab("World", 105)
 Pages["Combat"].Visible = true
 
--- ЛОГИКА РАБОТЫ
-RunService.RenderStepped:Connect(function()
-    if _G.AimEnabled then
-        local target = nil
-        local dist = _G.AimbotFOV
-        for _, v in pairs(Players:GetPlayers()) do
-            if v ~= lp and v.Character and v.Character:FindFirstChild("Head") then
-                local pos, onScreen = camera:WorldToViewportPoint(v.Character.Head.Position)
-                local mag = (Vector2.new(pos.X, pos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
-                if mag < dist and onScreen then target = v; dist = mag end
-            end
-        end
-        if target then camera.CFrame = CFrame.new(camera.CFrame.Position, target.Character.Head.Position) end
-    end
-    if _G.EspEnabled then
-        for _, v in pairs(Players:GetPlayers()) do
-            if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local b = v.Character:FindFirstChild("TVV") or Instance.new("BoxHandleAdornment", v.Character)
-                b.Name = "TVV"; b.Adornee = v.Character; b.AlwaysOnTop = true; b.Size = Vector3.new(4,5,0.1); b.Color3 = Color3.fromRGB(255,0,0); b.Transparency = 0.7
-            end
-        end
-    end
-end)
+-- КНОПКА ОТКРЫТИЯ С НЕОНОМ
+local Toggle = Instance.new("ImageButton", ScreenGui)
+Toggle.Size = UDim2.new(0, 50, 0, 50)
+Toggle.Position = UDim2.new(0, 10, 0.4, 0)
+Toggle.Image = "rbxassetid://6031225818"
+Toggle.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Toggle.Visible = false
+local TCorner = Instance.new("UICorner", Toggle)
+TCorner.CornerRadius = UDim.new(1, 0)
+local TStroke = Instance.new("UIStroke", Toggle)
+TStroke.Color = Color3.fromRGB(255, 0, 50)
+TStroke.Thickness = 2
 
-ToggleBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
+-- Запуск Интро и Показ меню
+task.spawn(StartIntro)
+task.wait(3.5)
+Main.Visible = true
+MainGlow.Visible = true
+Toggle.Visible = true
+playSfx(1548170034)
