@@ -1,60 +1,91 @@
--- Вкладка Автоматизация
-local AutoTab = Window:CreateTab("Автоматизация", 4483362458)
+lua
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local AutoProximity = false
-AutoTab:CreateToggle({
-   Name = "Auto Proximity Prompt (Быстрое E)",
+local Window = Rayfield:CreateWindow({
+   Name = "💎 TVVHO HUB | Steal Loot Edition",
+   LoadingTitle = "Запуск Снайпера Покупок...",
+   LoadingSubtitle = "by TVVHO",
+})
+
+-- ВКЛАДКА: СНАЙПЕР (Самое важное для этого плейса)
+local SniperTab = Window:CreateTab("Снайпер Покупок", 4483362458)
+
+local AutoBuy = false
+SniperTab:CreateToggle({
+   Name = "AUTO-BUY: Забирать всё первым",
    CurrentValue = false,
    Callback = function(Value)
-      AutoProximity = Value
+      AutoBuy = Value
       task.spawn(function()
-         while AutoProximity do
-            -- Ищем все объекты взаимодействия в радиусе 20 блоков
-            for _, prompt in pairs(workspace:GetDescendants()) do
-               if prompt:IsA("ProximityPrompt") then
-                  -- Убираем задержку (делаем моментальным)
-                  prompt.HoldDuration = 0
-                  -- Если игрок рядом — активируем
-                  local player = game.Players.LocalPlayer
-                  if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                     local dist = (prompt.Parent:IsA("Model") and prompt.Parent:GetModelCFrame().Position or prompt.Parent.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                     if dist < 15 then -- Радиус срабатывания
-                        fireproximityprompt(prompt)
-                     end
-                  end
+         while AutoBuy do
+            -- Ищем ClickDetector (та самая рука на экране)
+            for _, v in pairs(workspace:GetDescendants()) do
+               if v:IsA("ClickDetector") then
+                  -- Проверяем, что это не дверь и не мусор (можно настроить)
+                  -- Дистанция клика в этом плейсе важна
+                  fireclickdetector(v)
                end
             end
-            task.wait(0.1) -- Скорость проверки (можно меньше, но может лагать)
+            task.wait(0.01) -- Скорость сканирования (бешеная)
          end
       end)
    end,
 })
 
-AutoTab:CreateToggle({
-   Name = "Auto Clicker (Кликер)",
-   CurrentValue = false,
-   Callback = function(Value)
-      _G.AutoClick = Value
-      task.spawn(function()
-         while _G.AutoClick do
-            local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-            if tool then
-               tool:Activate()
-            end
-            task.wait(0.01)
-         end
-      end)
-   end,
-})
-
-AutoTab:CreateButton({
-   Name = "Удалить задержку нажатия (Instant Interact)",
+SniperTab:CreateButton({
+   Name = "Мгновенное использование (E)",
    Callback = function()
       for _, v in pairs(workspace:GetDescendants()) do
          if v:IsA("ProximityPrompt") then
             v.HoldDuration = 0
          end
       end
-      Rayfield:Notify({Title = "TVVHO", Content = "Теперь все кнопки 'E' нажимаются мгновенно!", Duration = 3})
    end,
+})
+
+-- ВКЛАДКА: ЗАЩИТА БАЗЫ
+local DefenseTab = Window:CreateTab("Защита", 4483362458)
+
+DefenseTab:CreateToggle({
+   Name = "Подсветка воров (ESP)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.PlayerESP = Value
+      while _G.PlayerESP do
+         for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= game.Players.LocalPlayer and p.Character and not p.Character:FindFirstChild("Highlight") then
+               local h = Instance.new("Highlight", p.Character)
+               h.FillColor = Color3.fromRGB(255, 0, 0)
+            end
+         end
+         task.wait(2)
+      end
+   end,
+})
+
+-- ВКЛАДКА: ПЕРСОНАЖ
+local PlayerTab = Window:CreateTab("Игрок", 4483345998)
+
+PlayerTab:CreateSlider({
+   Name = "Скорость (WalkSpeed)",
+   Range = {16, 150},
+   Increment = 1,
+   CurrentValue = 16,
+   Callback = function(Value)
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+   end,
+})
+
+PlayerTab:CreateButton({
+   Name = "Fly (Полет для набегов)",
+   Callback = function()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.lua"))()
+   end,
+})
+
+-- УВЕДОМЛЕНИЕ О ЗАПУСКЕ
+Rayfield:Notify({
+   Title = "TVVHO АКТИВИРОВАН",
+   Content = "Включи 'AUTO-BUY', чтобы забирать вещи за 0.01 сек!",
+   Duration = 5,
 })
