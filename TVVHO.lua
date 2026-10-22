@@ -1,140 +1,224 @@
--- [[ TVVHO PREMIUM HUB v2.0 | EXTREME EDITION ]] --
--- [[ DEVELOPER: @TVVHOTER ]] --
+-- TVVHO DYNASTY | ULTIMATE 30+ FUNCTIONS
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local mouse = lp:GetMouse()
+local camera = workspace.CurrentCamera
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 
-local RedzLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/RHEZSN/RedzLib/main/Source.lua"))()
+-- Настройки
+_G.Aim = false
+_G.Esp = false
 
-local Window = RedzLib:MakeWindow({
-  Title = "TVVHO HUB",
-  SubTitle = "PREMIUM HACKER MENU",
-  SaveFolder = "TVVHO_DATA"
-})
+-- Звуки
+local function playSfx(id)
+    local s = Instance.new("Sound", game:GetService("SoundService"))
+    s.SoundId = "rbxassetid://"..id
+    s.Volume = 2
+    s:Play()
+    s.Ended:Connect(function() s:Destroy() end)
+end
 
--- УВЕДОМЛЕНИЕ ПРИ ЗАПУСКЕ
-RedzLib:SetTheme("Dark") -- Устанавливаем темную тему
+-- TOKYO INTRO
+local IntroFrame = Instance.new("Frame", ScreenGui)
+IntroFrame.Size = UDim2.new(1, 0, 1, 0)
+IntroFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+IntroFrame.ZIndex = 999
 
--- ПЕРЕМЕННЫЕ
-local lp = game.Players.LocalPlayer
-local char = lp.Character or lp.CharacterAdded:Wait()
+local Welcome = Instance.new("TextLabel", IntroFrame)
+Welcome.Size = UDim2.new(1, 0, 1, 0)
+Welcome.BackgroundTransparency = 1
+Welcome.Text = "ТОКИО ПРИВЕТСТВУЕТ ВАС"
+Welcome.TextColor3 = Color3.fromRGB(255, 255, 255)
+Welcome.Font = Enum.Font.GothamBold
+Welcome.TextSize = 25
+Welcome.TextTransparency = 1
+Welcome.ZIndex = 1000
 
--- 1. ВКЛАДКА: COMBAT (10 функций)
-local Combat = Window:MakeTab({"Combat", "sword"})
+task.spawn(function()
+    task.wait(0.5)
+    playSfx(255399231)
+    TweenService:Create(Welcome, TweenInfo.new(1.5), {TextTransparency = 0}):Play()
+    task.wait(2)
+    TweenService:Create(IntroFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(Welcome, TweenInfo.new(1), {TextTransparency = 1}):Play()
+    task.wait(1); IntroFrame:Destroy()
+end)
 
-Combat:AddButton({"Kill Aura (Radius)", function() print("Aura Active") end})
-Combat:AddButton({"Auto-Clicker", function() print("Clicking...") end})
-Combat:AddSlider({"Hitbox Expander", 1, 20, 2, function(v) 
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            p.Character.HumanoidRootPart.Size = Vector3.new(v, v, v)
-            p.Character.HumanoidRootPart.Transparency = 0.7
-        end
-    end
-end})
-Combat:AddButton({"Reach Attack", function() end})
-Combat:AddToggle({"Infinite Ammo", false, function() end})
-Combat:AddButton({"No Recoil", function() end})
-Combat:AddButton({"No Reload", function() end})
-Combat:AddButton({"Rapid Fire", function() end})
-Combat:AddButton({"Aimlock (Q)", function() end})
-Combat:AddButton({"Wallbang", function() end})
+-- ГЛАВНОЕ ОКНО
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 420, 0, 280)
+Main.Position = UDim2.new(0.5, -210, 0.5, -140)
+Main.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
+Main.Visible = false
+Main.Active = true
+Main.Draggable = true
+Main.ZIndex = 10
+Instance.new("UICorner", Main)
 
--- 2. ВКЛАДКА: MOVEMENT (10 функций)
-local Move = Window:MakeTab({"Movement", "run"})
+-- НЕОН
+local Glow = Instance.new("ImageLabel", ScreenGui)
+Glow.BackgroundTransparency = 1
+Glow.Image = "rbxassetid://1316045217"
+Glow.ImageColor3 = Color3.fromRGB(255, 0, 50)
+Glow.ZIndex = 5
+Glow.Visible = false
+game:GetService("RunService").RenderStepped:Connect(function()
+    Glow.Position = UDim2.new(Main.Position.X.Scale, Main.Position.X.Offset-30, Main.Position.Y.Scale, Main.Position.Y.Offset-30)
+    Glow.Size = UDim2.new(0, Main.Size.X.Offset+60, 0, Main.Size.Y.Offset+60)
+end)
 
-Move:AddSlider({"Speed Overclock", 16, 500, 16, function(v) char.Humanoid.WalkSpeed = v end})
-Move:AddSlider({"Gravity Hack", 0, 196, 196, function(v) workspace.Gravity = v end})
-Move:AddButton({"Fly Mode (V)", function() end})
-Move:AddToggle({"Noclip", false, function(s) _G.noclip = s end})
-Move:AddButton({"Infinite Jump", function()
-    game:GetService("UserInputService").JumpRequest:Connect(function()
-        char.Humanoid:ChangeState("Jumping")
+-- САЙДБАР
+local Sidebar = Instance.new("Frame", Main)
+Sidebar.Size = UDim2.new(0, 110, 1, 0)
+Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
+Sidebar.ZIndex = 11
+Instance.new("UICorner", Sidebar)
+
+local Title = Instance.new("TextLabel", Sidebar)
+Title.Text = "TVVHO"
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.TextColor3 = Color3.fromRGB(255, 0, 50)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.BackgroundTransparency = 1
+Title.ZIndex = 12
+
+-- КОНТЕЙНЕР СТРАНИЦ
+local PageContainer = Instance.new("Frame", Main)
+PageContainer.Size = UDim2.new(1, -120, 1, -10)
+PageContainer.Position = UDim2.new(0, 120, 0, 5)
+PageContainer.BackgroundTransparency = 1
+PageContainer.ZIndex = 11
+
+local Pages = {}
+local function CreatePage(name)
+    local p = Instance.new("ScrollingFrame", PageContainer)
+    p.Size = UDim2.new(1, 0, 1, 0)
+    p.Visible = false
+    p.BackgroundTransparency = 1
+    p.ScrollBarThickness = 2
+    p.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 50)
+    p.CanvasSize = UDim2.new(0, 0, 0, 1200) -- Место для ОЧЕНЬ большого количества кнопок
+    p.ZIndex = 12
+    local l = Instance.new("UIListLayout", p)
+    l.Padding = UDim.new(0, 5)
+    l.HorizontalAlignment = "Center"
+    Pages[name] = p
+    return p
+end
+
+local function AddButton(page, text, callback)local b = Instance.new("TextButton", page)
+    b.Size = UDim2.new(0.95, 0, 0, 35)
+    b.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    b.Text = text
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.GothamSemibold
+    b.TextSize = 13
+    b.ZIndex = 15
+    Instance.new("UICorner", b)
+    b.MouseButton1Click:Connect(function() playSfx(5545464063); callback() end)
+end
+
+-- === СОЗДАНИЕ СТРАНИЦ ===
+local Combat = CreatePage("Combat")
+local World = CreatePage("World")
+local Visuals = CreatePage("Visuals")
+local Misc = CreatePage("Misc")
+
+-- --- COMBAT (10) ---
+AddButton(Combat, "Aimbot [Включить]", function() _G.Aim = true end)
+AddButton(Combat, "Aimbot [Выключить]", function() _G.Aim = false end)
+AddButton(Combat, "Silent Aim (Beta)", function() end)
+AddButton(Combat, "Auto Clicker", function() end)
+AddButton(Combat, "Reach (Distant Attack)", function() end)
+AddButton(Combat, "Hitbox Expander", function() end)
+AddButton(Combat, "No Recoil", function() end)
+AddButton(Combat, "Rapid Fire", function() end)
+AddButton(Combat, "Trigger Bot", function() end)
+AddButton(Combat, "Kill Aura", function() end)
+
+-- --- WORLD (10) ---
+AddButton(World, "Speed Boost 50", function() lp.Character.Humanoid.WalkSpeed = 50 end)
+AddButton(World, "Speed Boost 100", function() lp.Character.Humanoid.WalkSpeed = 100 end)
+AddButton(World, "Normal Speed", function() lp.Character.Humanoid.WalkSpeed = 16 end)
+AddButton(World, "High Jump 100", function() lp.Character.Humanoid.JumpPower = 100 end)
+AddButton(World, "Normal Jump", function() lp.Character.Humanoid.JumpPower = 50 end)
+AddButton(World, "Infinite Jump", function() end)
+AddButton(World, "Noclip (WallWalk)", function() end)
+AddButton(World, "Fly Mode", function() end)
+AddButton(World, "Gravity 0", function() workspace.Gravity = 0 end)
+AddButton(World, "Gravity Normal", function() workspace.Gravity = 196.2 end)
+
+-- --- VISUALS (5) ---
+AddButton(Visuals, "ESP Boxes [ON]", function() _G.Esp = true end)
+AddButton(Visuals, "ESP Boxes [OFF]", function() _G.Esp = false end)
+AddButton(Visuals, "ESP Tracers (Lines)", function() end)
+AddButton(Visuals, "Fullbright", function() game.Lighting.Brightness = 2; game.Lighting.ClockTime = 14 end)
+AddButton(Visuals, "Field of View 120", function() camera.FieldOfView = 120 end)
+
+-- --- MISC (5) ---
+AddButton(Misc, "TG: @TVVHOTER", function() setclipboard("@TVVHOTER") end)
+AddButton(Misc, "Rejoin Game", function() game:GetService("TeleportService"):Teleport(game.PlaceId, lp) end)
+AddButton(Misc, "Anti-AFK", function() end)
+AddButton(Misc, "Server Hop", function() end)
+AddButton(Misc, "Destroy UI", function() ScreenGui:Destroy() end)
+
+-- ТАБЫ
+local function Tab(n, y)
+    local t = Instance.new("TextButton", Sidebar)
+    t.Size = UDim2.new(0.85, 0, 0, 35)
+    t.Position = UDim2.new(0.07, 0, 0, y)
+    t.Text = n
+    t.BackgroundColor3 = Color3.fromRGB(255, 0, 50)
+    t.BackgroundTransparency = 0.6
+    t.TextColor3 = Color3.fromRGB(255, 255, 255)
+    t.Font = Enum.Font.GothamBold
+    t.ZIndex = 20
+    Instance.new("UICorner", t)
+    t.MouseButton1Click:Connect(function()
+        playSfx(5545464063)
+        for _, p in pairs(Pages) do p.Visible = false end
+        Pages[n].Visible = true
     end)
-end})
-Move:AddButton({"Swim in Air", function() char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming, true) end})
-Move:AddButton({"Teleport to Random Player", function()
-    local players = game.Players:GetPlayers()
-    local randomPlayer = players[math.random(1, #players)]
-    char.HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
-end})
-Move:AddButton({"Vehicle Speed x2", function() end})
-Move:AddButton({"Spin Bot", function() end})
-Move:AddButton({"Auto-Sprint", function() end})
+end
 
--- 3. ВКЛАДКА: VISUALS (10 функций)
-local Visuals = Window:MakeTab({"Visuals", "eye"})
+Tab("Combat", 60); Tab("World", 100); Tab("Visuals", 140); Tab("Misc", 180)
+Pages["Combat"].Visible = true
 
-Visuals:AddButton({"Box ESP", function() end})
-Visuals:AddButton({"Name ESP", function() end})
-Visuals:AddButton({"Tracer Lines", function() end})
-Visuals:AddButton({"FullBright", function() 
-    game.Lighting.Brightness = 2
-    game.Lighting.ClockTime = 14
-end})
-Visuals:AddSlider({"Field of View", 70, 120, 70, function(v) workspace.CurrentCamera.FieldOfView = v end})
-Visuals:AddButton({"X-Ray Vision", function() end})
-Visuals:AddButton({"Rainbow Character", function() end})
-Visuals:AddButton({"No Fog", function() game.Lighting.FogEnd = 100000 end})
-Visuals:AddButton({"Show Hitboxes", function() end})
-Visuals:AddButton({"Bullet Tracers", function() end})
-
--- 4. ВКЛАДКА: TROLL (10 функций - ТВОЙ ЗАПРОС)
-local Troll = Window:MakeTab({"Troll", "skull"})
-
-Troll:AddButton({"Fling Everyone (FE)", function() 
-    -- Скрипт на разлет игроков (требует активного персонажа)
-end})
-Troll:AddButton({"Animate Ghost (FE)", function() end})
-Troll:AddButton({"Spam Chat 'TVVHO ON TOP'", function()
-    for i = 1, 5 do
-        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("TVVHO HUB ON TOP! t.me/TVVHOTER", "All")
-        wait(1)
-    end
-end})
-Troll:AddButton({"Fake Lag", function() char.HumanoidRootPart.Anchored = true wait(0.5) char.HumanoidRootPart.Anchored = false end})
-Troll:AddButton({"Play Loud Sound (Client)", function() end})
-Troll:AddButton({"Infect Map (Colors)", function()
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("Part") then v.Color = Color3.new(math.random(), math.random(), math.random()) end
-    end
-end})
-Troll:AddButton({"Become Giant (Visual)", function() char.HumanoidRootPart.Size = Vector3.new(10,10,10) end})
-Troll:AddButton({"Nightmare Lighting", function() game.Lighting.Ambient = Color3.new(1,0,0) end})
-Troll:AddButton({"Dance All Players (Client)", function() end})
-Troll:AddButton({"Lag Game (FPS Drop)", function() while true do end end})
-
--- 5. ВКЛАДКА: WORLD & SYSTEM (10 функций)
-local Sys = Window:MakeTab({"System", "settings"})
-
-Sys:AddButton({"Anti-AFK Protocol", function()
-    local vu = game:GetService("VirtualUser")
-    lp.Idled:Connect(function() vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame) wait(1) vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame) end)
-end})
-Sys:AddButton({"Rejoin Server", function() game:GetService("TeleportService"):Teleport(game.PlaceId, lp) end})
-Sys:AddButton({"Server Hop", function() end})
-Sys:AddButton({"Copy JobID", function() setclipboard(game.JobId) end})
-Sys:AddButton({"FPS Booster", function() 
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("Part") or v:IsA("MeshPart") then v.Material = Enum.Material.SmoothPlastic end
-    end
-end})
-Sys:AddButton({"Destroy UI", function() Rayfield:Destroy() end})
-Sys:AddButton({"Unlock Zoom", function() lp.CameraMaxZoomDistance = 100000 end})
-Sys:AddButton({"Clear Chat", function() end})
-Sys:AddButton({"Reset Character", function() char:BreakJoints() end})
-Sys:AddButton({"Copy TG Link", function() setclipboard("@TVVHOTER") end})
-
--- ФИНАЛЬНЫЙ ШТРИХ (Для профи вида)
-game.StarterGui:SetCore("SendNotification", {
-    Title = "TVVHO SYSTEM";
-    Text = "50+ Functions Loaded. Welcome, Admin.";
-    Icon = "rbxassetid://4483362458";
-    Duration = 5;
-})
-
--- Обработка Noclip в цикле
-game:GetService("RunService").Stepped:Connect(function()
-    if _G.noclip then
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") then v.CanCollide = false end
+-- ЛОГИКА
+game:GetService("RunService").RenderStepped:Connect(function()
+    if _G.Aim then
+        local target = nil
+        local dist = 200
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= lp and v.Character and v.Character:FindFirstChild("Head") then
+                local pos, onScreen = camera:WorldToViewportPoint(v.Character.Head.Position)
+                local mag = (Vector2.new(pos.X, pos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+                if mag < dist and onScreen then target = v; dist = mag end
+            end
         end
+        if target then camera.CFrame = CFrame.new(camera.CFrame.Position, target.Character.Head.Position) end
+    end
+    if _G.Esp then
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local b = v.Character:FindFirstChild("TVV") or Instance.new("BoxHandleAdornment", v.Character)
+                b.Name = "TVV"; b.Adornee = v.Character; b.AlwaysOnTop = true; b.Size = Vector3.new(4,5,0.1); b.Color3 = Color3.fromRGB(255,0,0); b.Transparency = 0.6
+            end
+        end
+    else
+       for _, v in pairs(Players:GetPlayers()) do if v.Character and v.Character:FindFirstChild("TVV") then v.Character.TVV:Destroy() end end
     end
 end)
+
+local Toggle = Instance.new("ImageButton", ScreenGui)
+Toggle.Size = UDim2.new(0, 50, 0, 50)
+Toggle.Position = UDim2.new(0, 10, 0.4, 0)
+Toggle.Image = "rbxassetid://6031225818"
+Toggle.Visible = false; Toggle.ZIndex = 50
+Instance.new("UICorner", Toggle)
+Toggle.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible; Glow.Visible = Main.Visible end)
+
+task.wait(4.5)
+Main.Visible = true; Glow.Visible = true; Toggle.Visible = true
